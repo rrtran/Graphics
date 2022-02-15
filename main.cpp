@@ -1,6 +1,7 @@
 #include "include/sb7.h"
 #include "include/vmath.h"
 #include <iostream>
+#include <cmath>
 #include <cstdio>
 #include <vector>
 
@@ -39,7 +40,7 @@ GLuint compile_shaders()
 		"								  vec4(0.0, 0.0, 1.0, 1.0));		 \n"
 		"																	 \n"
 		"	//Index into our array using gl_VertexID						 \n"	
-		"	gl_Position = vertices[gl_VertexID];							 \n"
+		"	gl_Position = vertices[gl_VertexID] + offset;					 \n"
 		"																	 \n"
 		"	vs_out.color = colors[gl_VertexID];								 \n"
 		"}																	 \n"
@@ -334,17 +335,75 @@ public:
 		vec3 b(4.0f, 5.0f, 6.0f);
 		vec3 c;
 
+		cout << "vector addition" << endl;
+		cout << "---------------" << endl;
 		c = a + b;
-		//printf("(1.0f, 2.0f, 3.0f) + (4.0f, 5.0f, 6.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
-		c = a - b;
-		//printf("(1.0f, 2.0f, 3.0f) - (4.0f, 5.0f, 6.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
-		c += b;
-		//printf("(-3.0f, -3.0f, -3.0f) + (4.0f, 5.0f, 6.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
-		c = -c;
-		//printf("-1 * (1.0f, 2.0f, 3.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
+		printf("(1.0f, 2.0f, 3.0f) + (4.0f, 5.0f, 6.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
+		cout << endl;
 
-		float d = dot(a, b);
+		cout << "vector subtraction" << endl;
+		cout << "------------------" << endl;
+		c = a - b;
+		printf("(1.0f, 2.0f, 3.0f) - (4.0f, 5.0f, 6.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
+		cout << endl;
+
+		cout << "shorthand addition" << endl;
+		cout << "------------------" << endl;
+		c += b;
+		printf("(-3.0f, -3.0f, -3.0f) + (4.0f, 5.0f, 6.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
+		cout << endl;
+
+		cout << "unary negation" << endl;
+		cout << "--------------" << endl;
+		c = -c;
+		printf("-1 * (1.0f, 2.0f, 3.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
+		cout << endl;
+
+		float j = dot(a, b);
+		float d = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+		cout << "dot product" << endl;
+		cout << "-----------" << endl;
 		printf("(1.0f, 2.0f, 3.0f) * (4.0f, 5.0f, 6.0f) = %.1f\n", d);
+		printf("dot((1.0f, 2.0f, 3.0f), (4.0f, 5.0f, 6.0f)) = %.1f\n", j);
+		cout << endl;
+
+		cout << "angle between 2 unit vectors" << endl;
+		cout << "----------------------------" << endl;
+		vec3 e(1.0f, 0.0f, 0.0f);
+		vec3 f(0.0f, 1.0f, 0.0f);
+		float g = angle(e, f);
+		cout << "Angle between vector a and b (in radians): " << g << endl;
+		cout << endl;
+
+		cout << "cross product" << endl;
+		cout << "-------------" << endl;
+		c[0] = a[1] * b[2] - a[2] * b[1];
+		c[1] = a[2] * b[0] - a[0] * b[2];
+		c[2] = a[0] * b[1] - a[1] * b[0];
+		printf("(1.0f, 2.0f, 3.0f) X (4.0f, 5.0f, 6.0f) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
+		c = cross(a, b);
+		printf("cross(a, b) = (%.1f, %.1f, %.1f)\n", c[0], c[1], c[2]);
+		cout << endl;
+
+		cout << "magnitude" << endl;
+		cout << "---------" << endl;
+		float h = sqrt(pow(c[0], 2.0f) + pow(c[1], 2.0f) + pow(c[2], 2.0f));
+		float i = length(c);
+		printf("sqrt((-3.0f)^2 + (6.0f)^2 + (-3.0f)^ 2) = %f\n", h);
+		printf("length((-3.0f, 6.0f, -3.0f)) = %f\n", i);
+		cout << endl;
+
+		cout << "Reflection" << endl;
+		cout << "----------" << endl;
+		vec3 k(1.0f, 0.0f, -1.0f); // Incoming unit-length vector
+		vec3 l(0.0f, 0.0f, 1.0f); // Surface normal unit-length vector
+		vec3 m = k - 2.0f * dot(l, k) * l; // Reflected unit-length vector
+		vec3 n = reflect(k, l);
+		printf("(1.0f, 0.0f, -1.0f) - (dot(2 * (0.0f, 0.0f, 1.0f), (1.0f, 0.0f, -1.0f)) * (0.0f, 0.0f, 1.0f) = (%.1f, %.1f, %.1f)\n", m[0], m[1], m[2]);
+		printf("reflect((1.0f, 0.0f, -1.0f), (0.0f, 0.0f, 1.0f)) = (%.1f, %.1f, %.1f)\n", n[0], n[1], n[2]);
+		cout << endl;
+
+		
 
 		glPatchParameteri(GL_PATCH_VERTICES, 3);
 		// Draw one triangle
