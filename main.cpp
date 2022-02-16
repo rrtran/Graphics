@@ -403,8 +403,23 @@ public:
 		printf("reflect((1.0f, 0.0f, -1.0f), (0.0f, 0.0f, 1.0f)) = (%.1f, %.1f, %.1f)\n", n[0], n[1], n[2]);
 		cout << endl;
 
-		
+		cout << "Refraction" << endl;
+		cout << "----------" << endl;
+		float p = 1.0f; // Refractive index
+		float o = 1 - pow(p, 2.0f) * (1 - pow(dot(l, k), 2.0f)); 
+		vec3 q;
+		if (o < 0.0f) {
+			q = vec3(0.0f, 0.0f, 0.0f);
+			printf("1 - (0.5f)^2 * (1 - dot((0.0f, 0.0f, 1.0f), (1.0f, 0.0f, 1.0f))^2 < 0.0: (%f, %f, %f)\n", q[0], q[1], q[2]);
+		}
+		else {
+			q = p * k - (p * dot(l, k) + sqrt(o)) * l;
+			printf("1 - (0.5f)^2 * (1 - dot((0.0f, 0.0f, 1.0f), (1.0f, 0.0f, 1.0f))^2 >= 0.0: (%f, %f, %f)\n", q[0], q[1], q[2]);
+		}
 
+		vec3 r = refract(k, l, p);
+		printf("refract((1.0f, 0.0f, -1.0f), (0.0f, 0.0f, 1.0f) = (%f, %f, %f)\n", r[0], r[1], r[2]);
+		cout << endl;
 		glPatchParameteri(GL_PATCH_VERTICES, 3);
 		// Draw one triangle
 		glDrawArrays(GL_PATCHES, 0, 3);
