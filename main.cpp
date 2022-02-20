@@ -23,7 +23,7 @@ GLuint compile_shaders()
 		"#version 450 core													 \n"
 		"																	 \n"
 		"layout (location = 0) in vec4 offset; 								 \n"
-		"layout (location = 1) in vec4 color;								 \n"
+		"layout (location = 1) in vec4 color;								 \n"	
 		"																	 \n"
 		"out VS_OUT															 \n"
 		"{																	 \n"
@@ -32,15 +32,39 @@ GLuint compile_shaders()
 		"																	 \n"
 		"void main()														 \n"
 		"{																	 \n"
+		"	mat4 m1 = {vec4(1.0f, 0.0f, 0.0f, 0.0f),						 \n"
+		"					 vec4(0.0f, 1.0f, 0.0f, 0.0f),					 \n"
+		"					 vec4(0.0f, 0.0f, 1.0f, 0.0f),					 \n"	
+		"					 vec4(0.0f, 0.0f, 0.0f, 1.0f)};		   			 \n"
+		"	mat4 m2 = {vec4(1.0f, 0.0f, 0.0f, 0.0f),						 \n"
+		"			   vec4(0.0f, 1.0f, 0.0f, 0.5f),						 \n"
+		"			   vec4(0.0f, 0.0f, 1.0f, 0.0f),						 \n"
+		"			   vec4(0.0f, 0.0f, 0.0f, 1.0f)};						 \n"
+		"	mat4 m3 = { vec4(1.0f, 0.0f, 0.0f, 0.0f),						 \n"
+		"				vec4(0.0f, cos(radians(45)), sin(radians(45)), 0.0f),\n"
+		"				vec4(0.0f, -sin(radians(45)), cos(radians(45)), 0.0f),\n"
+		"				vec4(0.0f, 0.0f, 0.0f, 1.0f) };						 \n"
+		"	float x = 90;													\n"
+		"	mat4 m4 = {	vec4(cos(radians(x)), -sin(radians(x)), 0.0f, 0.0f),\n"
+		"				vec4(sin(radians(x)), cos(radians(x)), 0.0f, 0.0f),\n"
+		"				vec4(0.0f, 0.0f, 1.0f, 0.0f),						 \n"
+		"				vec4(0.0f, 0.0f, 0.0f, 1.0f)};						 \n"
+		"	mat4 m5 = { vec4(0.5f, 0.0f, 0.0f, 0.0f),						 \n"
+		"				vec4(0.0f, 0.5f, 0.0f, 0.0f),						 \n"
+		"				vec4(0.0f, 0.0f, 0.5f, 0.0f),						 \n"
+		"				vec4(0.0f, 0.0f, 0.0f, 1.0f)};						 \n"
 		"	const vec4 vertices[3] = vec4[3](vec4(0.25, -0.25, 0.5, 1.0),    \n"
 		"								   	 vec4(-0.25, -0.25, 0.5, 1.0),	 \n"
-		"									 vec4( 0.25,  0.25, 0.5, 1.0));	 \n"
+		"									 vec4( 0.25, 0.25, 0.5, 1.0));	 \n"
+		"	for (int i = 0; i < vertices.length(); i++) {					 \n"
+		"		vertices[i] = vertices[i] * m5 * m4 * m2;					 \n"
+		"	}																 \n"
 		"	const vec4 colors[] = vec4[3](vec4(1.0, 0.0, 0.0, 1.0),			 \n"
 		"								  vec4(0.0, 1.0, 0.0, 1.0),			 \n"
 		"								  vec4(0.0, 0.0, 1.0, 1.0));		 \n"
 		"																	 \n"
 		"	//Index into our array using gl_VertexID						 \n"	
-		"	gl_Position = vertices[gl_VertexID] + offset;					 \n"
+		"	gl_Position = vertices[gl_VertexID];							 \n"
 		"																	 \n"
 		"	vs_out.color = colors[gl_VertexID];								 \n"
 		"}																	 \n"
@@ -308,7 +332,7 @@ public:
 	void render(double currentTime)
 	{
 		// { red, green, blue, alpha }
-		static const GLfloat color[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+		static const GLfloat color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 		glClearBufferfv(GL_COLOR, 0, color);
 
 		// Use the program object we created earlier for rendering
@@ -321,7 +345,7 @@ public:
 		GLfloat attrib2[] = { (float)sin(currentTime) * 0.5f + 0.5f,
 							  (float)cos(currentTime) * 0.5f + 0.5f,
 							  0.0f, 0.0f };
-
+		
 		glVertexAttrib4fv(0, attrib);
 		glVertexAttrib4fv(1, attrib2);
 
@@ -420,6 +444,341 @@ public:
 		vec3 r = refract(k, l, p);
 		printf("refract((1.0f, 0.0f, -1.0f), (0.0f, 0.0f, 1.0f) = (%f, %f, %f)\n", r[0], r[1], r[2]);
 		cout << endl;
+
+		mat2 m1;
+		mat3 m2;
+		mat4 m3;
+
+		GLfloat matrix1[16];
+		GLfloat matrix2[4][4];
+
+		float A00 = 1.0f;
+		float A01 = 2.0f;
+		float A02 = 3.0f;
+		float A03 = 4.0f;
+		float A10 = 5.0f;
+		float A11 = 6.0f;
+		float A12 = 7.0f;
+		float A13 = 8.0f;
+		float A20 = 9.0f;
+		float A21 = 10.0f;
+		float A22 = 11.0f;
+		float A23 = 12.0f;
+		float A30 = 13.0f;
+		float A31 = 14.0f;
+		float A32 = 15.0f;
+		float A33 = 16.0f;
+
+		static const float A[] =
+		{
+			A00, A01, A02, A03, A10, A11, A12, A13, 
+			A20, A21, A22, A23, A30, A31, A32, A33
+		};
+
+		static const float B[] =
+		{
+			A00, A10, A20, A30, A01, A11, A21, A31,
+			A20, A21, A22, A23, A30, A31, A32, A33
+		};
+
+		mat4 m4 = {vec4(1.0f, 2.0f, 3.0f, 4.0f),
+				   vec4(5.0f, 6.0f, 7.0f, 8.0f),
+				   vec4(9.0f, 10.0f, 11.0f, 12.0f),
+				   vec4(13.0f, 14.0f, 15.0f, 16.0f)};
+		mat4 m5 = {vec4(1.0f, 2.0f, 3.0f, 4.0f),
+				   vec4(5.0f, 6.0f, 7.0f, 8.0f),
+				   vec4(9.0f, 10.0f, 11.0f, 12.0f),
+				   vec4(13.0f, 14.0f, 15.0f, 16.0f)};
+
+		vec4 v1(1.0f, 1.0f, 1.0f, 1.0f);
+
+		vec4 v2 = (v1 * m4) * m5;
+		vec4 v3 = v1 * (m4 * m5);
+		
+		cout << "Multiplying vector by matrices" << endl;
+		cout << "------------------------------" << endl;
+		cout << "m4" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < m4.width(); i++) {
+			for (int j = 0; j < m4.height(); j++) {
+				printf("%.1f ", m4[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "m5" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < m5.width(); i++) {
+			for (int j = 0; j < m5.height(); j++) {
+				printf("%.1f ", m5[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "v1" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < v1.size(); i++) {
+			printf("%.1f ", v1[i]);
+		}
+		cout << endl;
+		
+		cout << "(v1 * m4) * m5" << endl;
+		cout << "--------------" << endl;
+		for (int i = 0; i < v2.size(); i++) {
+			printf("%.1f ", v2[i]);
+		}
+		cout << endl;
+
+		cout << "v1 * (m4 * m5)" << endl;
+		cout << "--------------" << endl;
+		for (int i = 0; i < v3.size(); i++) {
+			printf("%.1f ", v3[i]);
+		}
+		cout << endl;
+
+		cout << "Matix is not commutative" << endl;
+		cout << "------------------------" << endl;
+		m5 = m5.transpose();
+		mat4 m6 = m4 * m5;
+		mat4 m7 = m5 * m4;
+
+		cout << "m4" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < m4.width(); i++) {
+			for (int j = 0; j < m4.height(); j++) {
+				printf("%.1f ", m4[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "m5" << endl;
+		cout << "--" << endl;
+
+		for (int i = 0; i < m5.width(); i++) {
+			for (int j = 0; j < m5.height(); j++) {
+				printf("%.1f ", m5[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "m4 * m5" << endl;
+		cout << "-------" << endl;
+		for (int i = 0; i < m6.width(); i++) {
+			for (int j = 0; j < m6.height(); j++) {
+				printf("%.1f ", m6[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "m5 * m4" << endl;
+		cout << "-------" << endl;
+		for (int i = 0; i < m7.width(); i++) {
+			for (int j = 0; j < m7.height(); j++) {
+				printf("%.1f ", m7[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "Identity matrix" << endl;
+		cout << "---------------" << endl;
+		mat4 m8 = { vec4(1.0f, 0.0f, 0.0f, 0.0f),
+				   vec4(0.0f, 1.0f, 0.0f, 0.0f),
+				   vec4(0.0f, 0.0f, 1.0f, 0.0f),
+				   vec4(0.0f, 0.0f, 0.0f, 1.0f) };
+		mat4 m9 = mat4::identity();
+	
+		cout << "m8" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < m8.width(); i++)
+		{
+			for (int j = 0; j < m8.height(); j++) {
+				printf("%.1f ", m8[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "m9" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < m9.width(); i++)
+		{
+			for (int j = 0; j < m9.width(); j++) {
+				printf("%.1f ", m9[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		vec4 v4(0.1f, 0.2f, 0.3f, 1.0f);
+		cout << "v4" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < v4.size(); i++) {
+			printf("%.1f ", v4[i]);
+		}
+		cout << endl;
+
+		vec4 v4_transformed = v4 * m8;
+		cout << "v4 * m8" << endl;
+		cout << "-------" << endl;
+		for (int i = 0; i < v4_transformed.size(); i++) {
+			printf("%.1f ", v4_transformed[i]);
+		}
+		cout << endl;
+
+		cout << "Translation Matrix" << endl;
+		cout << "------------------" << endl;
+		mat4 m10 = { vec4(1.0f, 0.0f, 0.0f, 0.0f), 
+					 vec4(0.0f, 1.0f, 0.0f, 0.5f), 
+					 vec4(0.0f, 0.0f, 1.0f, 0.0f), 
+					 vec4(0.0f, 0.0f, 0.0f, 1.0f) }; 
+		mat4 m11 = translate(vec3(0.0f, 0.5f, 0.0f));
+
+		vec4 v5[3] = { vec4(0.25, -0.25, 0.5, 1.0),
+					 vec4(-0.25, -0.25, 0.5, 1.0),
+					 vec4(0.25, 0.25, 0.5, 1.0) };
+		vec4 v6[3];
+		for (int i = 0; i < 3; i++) {
+			v6[i] = v5[i] * m10;
+		}
+		
+		cout << "m10" << endl;
+		cout << "---" << endl;
+		for (int i = 0; i < m10.width(); i++) {
+			for (int j = 0; j < m10.height(); j++) {
+				printf("%.1f ", m10[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "m11" << endl;
+		cout << "---" << endl;
+		for (int i = 0; i < m11.width(); i++) {
+			for (int j = 0; j < m11.height(); j++) {
+				printf("%.1f ", m11[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "Vertices of a right triangle" << endl;
+		cout << "----------------------------" << endl;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < v5[i].size(); j++) {
+				printf("%.2f ", v5[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "Translated vertices" << endl;
+		cout << "-------------------" << endl;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < v6[i].size(); j++) {
+				printf("%.2f ", v6[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "Rotation matrix" << endl;
+		cout << "---------------" << endl;
+		mat4 m12 = { vec4(1.0f, 0.0f, 0.0f, 0.0f),
+					vec4(0.0f, cos(radians(90.0f)), sin(radians(90.0f)), 0.0),
+					vec4(0.0f, -sin(radians(90.0f)), cos(radians(90.0f)), 0.0),
+					vec4(0.0f, 0.0f, 0.0f, 1.0f) };
+		cout << "m12" << endl;
+		cout << "---" << endl;
+		for (int i = 0; i < m12.width(); i++) {
+			for (int j = 0; j < m12.height(); j++) {
+				printf("%.1f ", m12[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+		
+		vec4 v7[3];
+		for (int i = 0; i < 3; i++) {
+			v7[i] = v5[i] * m12;
+		}
+
+		cout << "Rotated vertices" << endl;
+		cout << "----------------" << endl;
+		cout << "v7" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < v7[i].size(); j++) {
+				printf("%.2f ", v7[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		cout << "Scaling Matrix" << endl;
+		cout << "--------------" << endl;
+		mat4 m13 = { vec4(0.5f, 0.0f, 0.0f, 0.0f),
+					 vec4(0.0f, 0.5f, 0.0f, 0.0f),
+					 vec4(0.0f, 0.0f, 0.5f, 0.0f),
+					 vec4(0.0f, 0.0f, 0.0f, 1.0f) };
+		cout << "m13" << endl;
+		cout << "---" << endl;
+		for (int i = 0; i < m13.width(); i++) {
+			for (int j = 0; j < m13.height(); j++) {
+				printf("% .1f ", m13[i][j]);
+			}
+			cout << endl;
+		}
+		cout << endl;
+
+		vec4 v8(1.0f, 1.0f, 1.0f, 1.0f);
+		cout << "v8" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < v8.size(); i++) {
+			printf("%.1f ", v8[i]);
+		}
+		cout << endl;
+
+		vec4 v9;
+		v9 = v8 * m13;
+		cout << "v9" << endl;
+		cout << "--" << endl;
+		for (int i = 0; i < v9.size(); i++) {
+			printf("%.1f ", v9[i]);
+		}
+		cout << endl;
+		
+		cout << "The Lookat Matrix" << endl;
+		cout << "-----------------" << endl;
+		vec4 v10(2.0f, 2.0f, 2.0f, 1.0f);
+		vec4 v11(1.0f, 1.0f, 1.0f, 1.0f);
+		vec4 v12 = (v10 - v11) / length(v10 - v11);
+		cout << "v10" << endl;
+		cout << "---" << endl;
+		for (int i = 0; i < v10.size(); i++) {
+			printf("%.1f ", v10[i]);
+		}
+		cout << endl;
+
+		cout << "v11" << endl;
+		cout << "---" << endl;
+		for (int i = 0; i < v11.size(); i++) {
+			printf("%.1f ", v11[i]);
+		}
+		cout << endl;
+
+		cout << "v12" << endl;
+		cout << "---" << endl;
+		for (int i = 0; i < v12.size(); i++) {
+			printf("%.1f ", v12[i]);
+		}
+		cout << endl;
+
 		glPatchParameteri(GL_PATCH_VERTICES, 3);
 		// Draw one triangle
 		glDrawArrays(GL_PATCHES, 0, 3);
