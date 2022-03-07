@@ -5,8 +5,8 @@
 #include <cstdio>
 #include <vector>
 
-using namespace std;
 using namespace vmath;
+using namespace std;
 
 GLuint compile_shaders()
 {
@@ -18,12 +18,27 @@ GLuint compile_shaders()
 	GLuint compute_shader;
 	GLuint program;
 
-	static const GLchar * vertex_shader_source[] =
+	static const GLchar* vertex_shader_source[] =
 	{
 		"#version 450 core													 \n"
 		"																	 \n"
-		"layout (location = 0) in vec4 offset; 								 \n"
-		"layout (location = 1) in vec4 color;								 \n"	
+		"layout (location = 0) in vec4 position; 							 \n"
+		"layout (location = 1) in vec4 color;								 \n"
+		"layout (location = 10) uniform float fTime;						 \n"
+		"layout (location = 11) uniform int iIndex;							 \n"
+		"layout (location = 12) uniform vec4 vColorValue;					 \n"
+		"layout (location = 13) uniform bool bSomeFlag;						 \n"
+		"																	 \n"
+		"uniform vec4 vColor;												 \n"
+		"uniform vec4 vColor2;												 \n"
+		"layout(std140) uniform TransformBlock {							 \n"
+		"	float scale;													 \n"
+		"	vec3 translation;												 \n"
+		"	float rotation[3];												 \n"
+		"	mat4 projection_matrix;											 \n"
+		"} transform;														 \n"
+		"																	 \n"
+		"																	 \n"
 		"																	 \n"
 		"out VS_OUT															 \n"
 		"{																	 \n"
@@ -34,7 +49,7 @@ GLuint compile_shaders()
 		"{																	 \n"
 		"	mat4 m1 = {vec4(1.0f, 0.0f, 0.0f, 0.0f),						 \n"
 		"					 vec4(0.0f, 1.0f, 0.0f, 0.0f),					 \n"
-		"					 vec4(0.0f, 0.0f, 1.0f, 0.0f),					 \n"	
+		"					 vec4(0.0f, 0.0f, 1.0f, 0.0f),					 \n"
 		"					 vec4(0.0f, 0.0f, 0.0f, 1.0f)};		   			 \n"
 		"	mat4 m2 = {vec4(1.0f, 0.0f, 0.0f, 0.0f),						 \n"
 		"			   vec4(0.0f, 1.0f, 0.0f, 0.5f),						 \n"
@@ -63,14 +78,17 @@ GLuint compile_shaders()
 		"								  vec4(0.0, 1.0, 0.0, 1.0),			 \n"
 		"								  vec4(0.0, 0.0, 1.0, 1.0));		 \n"
 		"																	 \n"
-		"	//Index into our array using gl_VertexID						 \n"	
-		"	gl_Position = vertices[gl_VertexID];							 \n"
+		"	//Index into our array using gl_VertexID						 \n"
+		"	gl_Position = position * m5 * m2;								 \n"
+		"	float n = fTime;												 \n"
+		"	vColor;															 \n"
+		"	vColor2;														 \n"
 		"																	 \n"
 		"	vs_out.color = colors[gl_VertexID];								 \n"
 		"}																	 \n"
 	};
 
-	static const GLchar * tess_control_shader_source[] =
+	static const GLchar* tess_control_shader_source[] =
 	{
 		"#version 450 core									\n"
 		"													\n"
@@ -104,7 +122,7 @@ GLuint compile_shaders()
 		"}													\n"
 	};
 
-	static const GLchar * tess_evaluation_shader_source[] =
+	static const GLchar* tess_evaluation_shader_source[] =
 	{
 		"#version 450 core											\n"
 		"															\n"
@@ -118,7 +136,7 @@ GLuint compile_shaders()
 		"	vec4 color;												\n"
 		"} tes_out;													\n"
 		"															\n"
-		"layout (triangles, equal_spacing, cw) in;					\n" 
+		"layout (triangles, equal_spacing, cw) in;					\n"
 		"															\n"
 		"void main()												\n"
 		"{															\n"
@@ -197,7 +215,7 @@ GLuint compile_shaders()
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, vertex_shader_source, NULL);
 	glCompileShader(vertex_shader);
-	
+
 	GLint isCompiled = 0;
 	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &isCompiled);
 	if (isCompiled == GL_TRUE)	cout << "vertex shader compiled" << endl;
@@ -209,7 +227,7 @@ GLuint compile_shaders()
 		// The maxLength includes the NULL character
 		std::vector<GLchar> errorLog(maxLength);
 		glGetShaderInfoLog(vertex_shader, maxLength, &maxLength, &errorLog[0]);
-		
+
 		for (int i = 0; i < errorLog.size(); i++) {
 			cout << errorLog[i];
 		}
@@ -286,12 +304,12 @@ GLuint compile_shaders()
 	program = glCreateProgram();
 	glAttachShader(program, vertex_shader);
 	glAttachShader(program, tess_control_shader);
-	glAttachShader(program, tess_evaluation_shader); 
+	glAttachShader(program, tess_evaluation_shader);
 	glAttachShader(program, geometry_shader);
 	glAttachShader(program, fragment_shader);
 	//glAttachShader(program, compute_shader);
 	glLinkProgram(program);
-	
+
 	GLint isLinked = 0;
 	glGetProgramiv(program, GL_LINK_STATUS, &isLinked);
 	if (isLinked == GL_TRUE)
@@ -731,32 +749,6 @@ void runVariousVectorAndMatrixComputations()
 		printf("%.1f ", v9[i]);
 	}
 	cout << endl;
-
-	cout << "The Lookat Matrix" << endl;
-	cout << "-----------------" << endl;
-	vec4 v10(2.0f, 2.0f, 2.0f, 1.0f);
-	vec4 v11(1.0f, 1.0f, 1.0f, 1.0f);
-	vec4 v12 = (v10 - v11) / length(v10 - v11);
-	cout << "v10" << endl;
-	cout << "---" << endl;
-	for (int i = 0; i < v10.size(); i++) {
-		printf("%.1f ", v10[i]);
-	}
-	cout << endl;
-
-	cout << "v11" << endl;
-	cout << "---" << endl;
-	for (int i = 0; i < v11.size(); i++) {
-		printf("%.1f ", v11[i]);
-	}
-	cout << endl;
-
-	cout << "v12" << endl;
-	cout << "---" << endl;
-	for (int i = 0; i < v12.size(); i++) {
-		printf("%.1f ", v12[i]);
-	}
-	cout << endl;
 }
 
 class my_application : public sb7::application
@@ -770,7 +762,7 @@ public:
 
 		// Use the program object we created earlier for rendering
 		glUseProgram(rendering_program);
- 
+
 		GLfloat attrib[] = { (float)sin(currentTime) * 0.5f,
 							 (float)cos(currentTime) * 0.6f,
 							 0.0f, 0.0f };
@@ -778,11 +770,152 @@ public:
 		GLfloat attrib2[] = { (float)sin(currentTime) * 0.5f + 0.5f,
 							  (float)cos(currentTime) * 0.5f + 0.5f,
 							  0.0f, 0.0f };
-		
+
 		glVertexAttrib4fv(0, attrib);
 		glVertexAttrib4fv(1, attrib2);
+		glUniform1f(10, 45.2f);
+		glUniform1i(11, 42);
+		glUniform4f(12, 1.0f, 0.0f, 0.0f, 1.0f);
+		glUniform1i(13, GL_FALSE);
 
+		// cout << glGetUniformLocation(rendering_program, "fTime") << endl;
+		//cout << glGetUniformLocation(rendering_program, "vColor") << endl;
 		
+		GLfloat vColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+		// glUniform4fv(iColorLocation, 1, vColor);
+
+		struct vertex {
+			float x;
+			float y;
+			float z;
+			float w;
+
+			float r;
+			float g;
+			float b;
+			float w2;
+		};
+		
+		GLuint vao;
+		GLuint buffer;
+
+		static const vertex vertices[] = { {0.25, -0.25, 0.5, 1.0, 1.0, 0.0, 0.0, 1.0},
+										   {-0.25, -0.25, 0.5, 1.0, 0.0, 1.0, 0.0, 1.0},
+										   {0.25, 0.25, 0.5, 1.0, 0.0, 0.0, 1.0, 1.0} };
+
+		// Create the vertex array object
+		glCreateVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+		
+		// Allocate and initialize a buffer object
+		glCreateBuffers(1, &buffer);
+		glNamedBufferStorage(buffer, sizeof(vertices), vertices, 0);
+
+		// Set up two vertex attributes - first positions
+		glVertexArrayAttribBinding(vao, 0, 0);
+		glVertexArrayAttribFormat(vao, 0, 4, GL_FLOAT, GL_FALSE, offsetof(vertex, x));
+		glEnableVertexArrayAttrib(vao, 0);
+
+		// Now Colors
+		glVertexArrayAttribBinding(vao, 1, 0);
+		glVertexArrayAttribFormat(vao, 1, 4, GL_FLOAT, GL_FALSE, offsetof(vertex, r));
+		glEnableVertexAttribArray(1);
+
+		// Finally, bind our one and only buffer to the vertex array object
+		glVertexArrayVertexBuffer(vao, 0, buffer, 0, sizeof(vertex));
+		
+		//cout << "Uniform TransformBlock Index: " << glGetUniformBlockIndex(rendering_program, "TransformBlock") << endl;
+
+		static const GLchar* uniformNames[4] =
+		{
+			"TransformBlock.scale",
+			"TransformBlock.translation",
+			"TransformBlock.rotation",
+			"TransformBlock.projection_matrix",
+		};
+		GLuint uniformIndices[4];
+
+		glGetUniformIndices(rendering_program, 4, uniformNames, uniformIndices);
+
+		GLint uniformOffsets[4];
+		GLint arrayStrides[4];
+		GLint matrixStrides[4];
+		glGetActiveUniformsiv(rendering_program, 4, uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets);
+		glGetActiveUniformsiv(rendering_program, 4, uniformIndices, GL_UNIFORM_ARRAY_STRIDE, arrayStrides);
+		glGetActiveUniformsiv(rendering_program, 4, uniformIndices, GL_UNIFORM_MATRIX_STRIDE, matrixStrides);
+		
+		// Allocate some memory for our buffer (don't forget to free it later)
+		unsigned char* buffer2 = (unsigned char*)malloc(4096);
+		*((float*)(buffer2 + uniformOffsets[0])) = 3.0f;
+
+		((float*)(buffer2 + uniformOffsets[1]))[0] = 1.0f;
+		((float*)(buffer2 + uniformOffsets[1]))[1] = 2.0f;
+		((float*)(buffer2 + uniformOffsets[1]))[2] = 3.0f;
+
+		const GLfloat rotations[] = { 30.0f, 40.0f, 60.0f };
+		unsigned int offset = uniformOffsets[2];
+		for (int n = 0; n < 3; n++) {
+			*((float*)(buffer2 + offset)) = rotations[n];
+			offset += arrayStrides[2];
+		}
+
+		const GLfloat matrix[] = {
+			1.0f, 2.0f, 3.0f, 4.0f,
+			9.0f, 8.0f, 7.0f, 6.0f,
+			2.0f, 4.0f, 6.0f, 8.0f,
+			1.0f, 3.0f, 5.0f, 7.0f
+		};
+
+		for (int i = 0; i < 4; i++) {
+			GLuint offset = uniformOffsets[3] + matrixStrides[3] * i;
+			for (int j = 0; j < 4; j++) {
+				*((float*)(buffer2 + offset)) = matrix[i * 4 + j];
+				offset += sizeof(GLfloat);
+			}
+		}
+
+		GLint transformBlockIndex = glGetUniformBlockIndex(rendering_program, "TransformBlock");
+		glUniformBlockBinding(rendering_program, transformBlockIndex, 2);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 2, *buffer2);
+		// GLuint buffer[2];
+		// GLuint vao;
+
+		/*static const GLfloat positions[] = { 0.25, -0.25, 0.5, 1.0,
+											 -0.25, -0.25, 0.5, 1.0,
+											 0.25, 0.25, 0.5, 1.0 };
+		static const GLfloat colors[] = { 1.0, 0.0, 0.0, 1.0,			
+										  0.0, 1.0, 0.0, 1.0,
+										  0.0, 0.0, 1.0, 1.0 };*/
+
+		//// Create the vertex array object
+		//glCreateVertexArrays(1, &vao);
+		//glBindVertexArray(vao);
+
+		//// Get create two buffers
+		//glCreateBuffers(2, &buffer[0]);
+
+		//// Initialize the first buffer
+		//glNamedBufferStorage(buffer[0], sizeof(positions), positions, 0);
+
+		//// Bind it to the vertex array - offset zero, stride = sizeof(vec3)
+		//glVertexArrayVertexBuffer(vao, 0, buffer[0], 0, sizeof(vmath::vec4));
+
+		//// Tell OpenGL what the format of the attribute is
+		//glVertexArrayAttribFormat(vao, 0, 4, GL_FLOAT, GL_FALSE, 0);
+
+		//// Tell OpenGL which vertex buffer binding to use for this attribute
+		//glVertexArrayAttribBinding(vao, 0, 0);
+
+		//// Enable the attribute
+		//glEnableVertexArrayAttrib(vao, 0);
+
+		// Perform similar initialization for the second buffer
+		//glNamedBufferStorage(buffer[1], sizeof(colors), colors, 0);
+		//glVertexArrayVertexBuffer(vao, 1, buffer[1], 0, sizeof(vmath::vec4));
+		//glVertexArrayAttribFormat(vao, 1, 4, GL_FLOAT, GL_FALSE, 0);
+		//glVertexArrayAttribBinding(vao, 1, 1);
+		//glEnableVertexAttribArray(1);
 
 		glPatchParameteri(GL_PATCH_VERTICES, 3);
 		// Draw one triangle
@@ -814,9 +947,9 @@ private:
 int main()
 {
 	my_application* app = new my_application();                                 \
-	app->run(app);                                  
-	delete app;                                    
-	return 0;                                       
+		app->run(app);
+	delete app;
+	return 0;
 }
 
 //int main()
