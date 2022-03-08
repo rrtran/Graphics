@@ -28,7 +28,7 @@ GLuint compile_shaders(void)
 		"									 vec4(-0.25, -0.25, 0.5, 1.0),\n"
 		"									 vec4(0.25, 0.25, 0.5, 1.0));\n"
 		"	gl_Position = proj_matrix * mv_matrix * position;\n"
-		"	vs_out.color = gl_Position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);\n"
+		"	vs_out.color = position * 2.0 + vec4(0.5, 0.5, 0.5, 0.0);\n"
 		"}\n"
 	};
 
@@ -159,21 +159,16 @@ public:
 		glVertexArrayAttribBinding(vao, 0, 0);
 		glEnableVertexArrayAttrib(vao, 0);
 
-		glUniformMatrix4fv(glGetUniformLocation(rendering_program, "proj_matrix"), 1, GL_FALSE, proj_matrix);
-
-		for (int i = 0; i < 24; i++) {
-			float f = (float)i + (float)currentTime * 0.3f;
+		float f = (float)currentTime * (float)M_PI * 0.1f;
 			vmath::mat4 mv_matrix =
-				vmath::translate(0.0f, 0.0f, -20.0f) *
-				vmath::rotate((float)currentTime * 45.0f, 0.0f, 1.0f, 0.0f) *
-				vmath::rotate((float)currentTime * 21.0f, 1.0f, 0.0f, 0.0f) *
-				vmath::translate(sinf(2.1f * f) * 2.0f,
-					cosf(1.7f * f) * 2.0f,
-					sinf(1.3f * f) * cosf(1.5f * f) * 2.0f);
+			vmath::translate(0.0f, 0.0f, -4.0f) *
+			vmath::rotate((float)currentTime * 45.0f, 0.0f, 1.0f, 0.0f) *
+			vmath::rotate((float)currentTime * 81.0f, 1.0f, 0.0f, 0.0f);
 
-			glUniformMatrix4fv(glGetUniformLocation(rendering_program, "mv_matrix"), 1, GL_FALSE, mv_matrix);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		glUniformMatrix4fv(glGetUniformLocation(rendering_program, "mv_matrix"), 1, GL_FALSE, mv_matrix);
+		glUniformMatrix4fv(glGetUniformLocation(rendering_program, "proj_matrix"), 1, GL_FALSE, proj_matrix);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		
 
 		std::cout << currentTime << std::endl;
 	}
