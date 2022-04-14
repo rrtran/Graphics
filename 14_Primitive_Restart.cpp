@@ -214,6 +214,7 @@ public:
 		glDeleteBuffers(1, &positions4_buffer);
 		glDeleteBuffers(1, &positions5_buffer);
 		glDeleteBuffers(1, &index_buffer);
+		glDeleteBuffers(1, &index2_buffer);
 	}
 
 	// startup - Define the source code for the vertex and fragment shaders, compile shaders, and link shader objects into a program object.
