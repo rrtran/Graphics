@@ -1,2 +1,2 @@
 <h1>Graphics</h1>
-<p>Just a compilation of source codes I wrote from reading OpenGL superbible for my own reference
+<p>Some C and some C++ code executing OpenGL stuff</p>
